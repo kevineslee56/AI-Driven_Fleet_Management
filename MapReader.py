@@ -1,0 +1,1 @@
+# read the files/maps created by MapMaker and create a representation with Node class

@@ -8,7 +8,7 @@ class Node:
         self.id = id
         self.x = x
         self.y = y
-        self.adj_nodes = {}
+        self.adj_nodes = []
         self.f = sys.maxsize
         self.g = 0
         self.h = 0

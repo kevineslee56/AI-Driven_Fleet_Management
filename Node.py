@@ -1,5 +1,4 @@
 import math
-import sys
 from functools import total_ordering
 
 @total_ordering

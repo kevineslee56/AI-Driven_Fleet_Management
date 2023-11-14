@@ -1,14 +1,18 @@
 from Node import Node, FindNodeDist
 import random
 import numpy as np
+from matplotlib.collections import LineCollection
+from matplotlib.colors import to_rgb
 import matplotlib.pyplot as plt
 
 import time
 
 def AddEdge(node1, node2):
     dist = FindNodeDist(node1, node2)
-    node1.adj_nodes.append((node2, dist))
-    node2.adj_nodes.append((node1, dist))
+    if not (node2, dist) in node1.adj_nodes:
+        node1.adj_nodes.append((node2, dist))
+    if not (node1, dist) in node2.adj_nodes:
+        node2.adj_nodes.append((node1, dist))
 
 def GenerateMap(num_nodes, num_edges, x_min, x_max, y_min, y_max):
     #num_nodes = int((x_max - x_min) * (y_max - y_min) * 0.2) # set num_nodes based on density desired
@@ -31,54 +35,24 @@ def GenerateMap(num_nodes, num_edges, x_min, x_max, y_min, y_max):
     for node in nodes_list:
         current_id = int(node.id)
         nearest_found = 0
-        radius = 1
+        # loop in spiral
+        rel_x = rel_y = 0
+        dx = 0
+        dy = -1
         while nearest_found < num_edges:
-            x_range = [max(node.x - radius, x_min), min(node.x + radius, x_max)]
-            y_range = [max(node.y - radius, y_min), min(node.y + radius, y_max)]
-            for x in range(x_range[0], x_range[1] + 1):
-                for y in y_range:
-                    other_node_id = int(occupied[y][x])
-                    if other_node_id != -1:
-                        nearest_found += 1
-                        AddEdge(node, nodes_list[other_node_id])
-                    if nearest_found >= num_edges:
-                        break
-                if nearest_found >= num_edges:
-                    break
-            if nearest_found >= num_edges:
-                break
-            for y in range(y_range[0] + 1, y_range[1]):
-                for x in x_range:
-                    other_node_id = int(occupied[y][x])
-                    if other_node_id != -1:
-                        nearest_found += 1
-                        AddEdge(node, nodes_list[other_node_id])
-                    if nearest_found >= num_edges:
-                        break
-                if nearest_found >= num_edges:
-                    break
-            radius += 1
+            coord_x = node.x + rel_x
+            coord_y = node.y + rel_y
+            if (coord_x >= x_min) and (coord_x <= x_max) and (coord_y >= y_min) and (coord_y <= y_max):
+                other_node_id = int(occupied[coord_y][coord_x])
+                if (other_node_id != -1) and (other_node_id != current_id):
+                    nearest_found += 1
+                    AddEdge(node, nodes_list[other_node_id])
+            if rel_x == rel_y or (rel_x < 0 and rel_x == -rel_y) or (rel_x > 0 and rel_x == 1-rel_y):
+                dx, dy = -dy, dx
+            rel_x, rel_y = rel_x + dx, rel_y + dy
+
     et = time.time()
-    print(et - st) # 0.02s for 1000 nodes, 0.05s for 5000 nodes, 0.09 for 10000 nodes
-
-    '''
-    st = time.time()
-    nodes_matrix = np.zeros((num_nodes, num_nodes), dtype=int)
-    for i in range(num_nodes):
-        for j in range(i+1, num_nodes):
-            nodes_matrix[i][j] = FindNodeDist(nodes_list[i], nodes_list[j])
-            nodes_matrix[j][i] = nodes_matrix[i][j]
-
-    print(nodes_matrix)
-
-    min_dist_indices = np.argpartition(nodes_matrix, kth=num_edges+1, axis=1)[:, :num_edges+1]
-    for i in range(num_nodes):
-        for j in min_dist_indices[i]:
-            if j != i:
-                AddEdge(nodes_list[i], nodes_list[j])
-    et = time.time()
-    print(et - st) # 0.6s for 1000 nodes, 16.1s for 5000 nodes
-    '''
+    print(et - st) # 0.03s for 1000 nodes, 0.077s for 5000 nodes, 0.21 for 10000 nodes
 
     # TODO: save map to file
 
@@ -91,11 +65,11 @@ def PlotMap(nodes_list):
     # plot all points at once
     node_x = [node.x for node in nodes_list]
     node_y = [node.y for node in nodes_list]
-    ax.scatter(node_x, node_y, marker='o', color='blue')
+    ax.scatter(node_x, node_y, marker='.', color='blue', s=[10 for node in nodes_list], zorder=5)
 
     # generate list of lines so plt.plot is 1 call (faster display)
-    p1 = []
-    p2 = []
+    segs = []
+    colours = []
     for node in nodes_list:
         current_id = int(node.id)
         for sub_node, dist in node.adj_nodes:
@@ -104,11 +78,9 @@ def PlotMap(nodes_list):
                 n = [n for n, d in sub_node.adj_nodes]
                 if node in n:
                     continue
-            p1.append([node.x, node.y])
-            p2.append([sub_node.x, sub_node.y])
-    lines = np.c_[p1, p2]
-    line_args = lines.reshape(-1, 2, 2).swapaxes(1, 2).reshape(-1, 2)
-    ax.plot(*line_args, c='green')
+            segs.append(((node.x, node.y),(sub_node.x, sub_node.y)))
+    line_collection = LineCollection(segs, linewidths=[0.5], colors=to_rgb('green'), zorder=0)
+    ax.add_collection(line_collection)
 
     ax.set_xlabel('X-axis')
     ax.set_ylabel('Y-axis')

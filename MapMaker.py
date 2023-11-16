@@ -87,24 +87,17 @@ def PlotMap(nodes_list):
     ax.set_title('Generated Map')
 
     # select start and end:
-    points = plt.ginput(2)
+    points = plt.ginput(1)
 
     start_node = None
     start_node_dist = 1000000000
-    end_node = None
-    end_node_dist = 1000000000
 
     n1 = Node("start", points[0][0], points[0][1])
-    n2 = Node("end", points[1][0], points[1][1])
     for node in nodes_list:
         dist = FindNodeDist(n1, node)
         if dist < start_node_dist:
             start_node_dist = dist
             start_node = node
-        dist = FindNodeDist(n2, node)
-        if dist < end_node_dist:
-            end_node_dist = dist
-            end_node = node
 
 
-    return start_node, end_node
+    return start_node, ax

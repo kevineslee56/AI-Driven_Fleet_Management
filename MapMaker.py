@@ -1,43 +1,110 @@
 from Node import Node, FindNodeDist
 import random
 import numpy as np
+from matplotlib.collections import LineCollection
+from matplotlib.colors import to_rgb
 import matplotlib.pyplot as plt
+
+import time
 
 def AddEdge(node1, node2):
     dist = FindNodeDist(node1, node2)
-    node1.adj_nodes.append((node2, dist))
-    node2.adj_nodes.append((node1, dist))
+    if not (node2, dist) in node1.adj_nodes:
+        node1.adj_nodes.append((node2, dist))
+    if not (node1, dist) in node2.adj_nodes:
+        node2.adj_nodes.append((node1, dist))
 
 def GenerateMap(num_nodes, num_edges, x_min, x_max, y_min, y_max):
+    #num_nodes = int((x_max - x_min) * (y_max - y_min) * 0.2) # set num_nodes based on density desired
+   
+    # prevent nodes from being generated on the same point
+    occupied = -np.ones((y_max - y_min + 1, x_max - x_min + 1))
     nodes_list = []
     for i in range(num_nodes):
-        nodes_list.append(Node(str(i), random.randint(x_min, x_max), random.randint(y_min, y_max)))
+        repeated = True
+        while repeated:
+            gen_x = random.randint(x_min, x_max)
+            gen_y = random.randint(y_min, y_max)
+            repeated = occupied[gen_y - y_min][gen_x - x_min] != -1
+            if not repeated:
+                occupied[gen_y - y_min][gen_x - x_min] = i
+                nodes_list.append(Node(str(i), gen_x, gen_y))
     
-    nodes_matrix = np.zeros((num_nodes, num_nodes), dtype=int)
-    for i in range(num_nodes):
-        for j in range(i+1, num_nodes):
-            nodes_matrix[i][j] = FindNodeDist(nodes_list[i], nodes_list[j])
-            nodes_matrix[j][i] = nodes_matrix[i][j]
+    # get n nearest nodes for each node
+    st = time.time()
+    for node in nodes_list:
+        current_id = int(node.id)
+        nearest_found = 0
+        # loop in spiral
+        rel_x = rel_y = 0
+        dx = 0
+        dy = -1
+        while nearest_found < num_edges:
+            coord_x = node.x + rel_x
+            coord_y = node.y + rel_y
+            if (coord_x >= x_min) and (coord_x <= x_max) and (coord_y >= y_min) and (coord_y <= y_max):
+                other_node_id = int(occupied[coord_y][coord_x])
+                if (other_node_id != -1) and (other_node_id != current_id):
+                    nearest_found += 1
+                    AddEdge(node, nodes_list[other_node_id])
+            if rel_x == rel_y or (rel_x < 0 and rel_x == -rel_y) or (rel_x > 0 and rel_x == 1-rel_y):
+                dx, dy = -dy, dx
+            rel_x, rel_y = rel_x + dx, rel_y + dy
 
-    print(nodes_matrix)
-
-    min_dist_indices = np.argpartition(nodes_matrix, kth=num_edges+1, axis=1)[:, :num_edges+1]
-    for i in range(num_nodes):
-        for j in min_dist_indices[i]:
-            if j != i:
-                AddEdge(nodes_list[i], nodes_list[j])
+    et = time.time()
+    print(et - st) # 0.03s for 1000 nodes, 0.077s for 5000 nodes, 0.21 for 10000 nodes
 
     # TODO: save map to file
 
     return nodes_list
 
 def PlotMap(nodes_list):
-    for node in nodes_list:
-        plt.scatter(node.x, node.y, marker='o', color='blue')
-        for n,dist in node.adj_nodes:
-            plt.plot([node.x, n.x], [node.y, n.y], color='green')
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
-    plt.xlabel('X-axis')
-    plt.ylabel('Y-axis')
-    plt.title('Generated Map')
-    plt.show()
+    # plot all points at once
+    node_x = [node.x for node in nodes_list]
+    node_y = [node.y for node in nodes_list]
+    ax.scatter(node_x, node_y, marker='.', color='blue', s=[10 for node in nodes_list], zorder=5)
+
+    # generate list of lines so plt.plot is 1 call (faster display)
+    segs = []
+    colours = []
+    for node in nodes_list:
+        current_id = int(node.id)
+        for sub_node, dist in node.adj_nodes:
+            sub_node_id = int(sub_node.id)
+            if (sub_node_id <= current_id):
+                n = [n for n, d in sub_node.adj_nodes]
+                if node in n:
+                    continue
+            segs.append(((node.x, node.y),(sub_node.x, sub_node.y)))
+    line_collection = LineCollection(segs, linewidths=[0.5], colors=to_rgb('green'), zorder=0)
+    ax.add_collection(line_collection)
+
+    ax.set_xlabel('X-axis')
+    ax.set_ylabel('Y-axis')
+    ax.set_title('Generated Map')
+
+    # select start and end:
+    points = plt.ginput(2)
+
+    start_node = None
+    start_node_dist = 1000000000
+    end_node = None
+    end_node_dist = 1000000000
+
+    n1 = Node("start", points[0][0], points[0][1])
+    n2 = Node("end", points[1][0], points[1][1])
+    for node in nodes_list:
+        dist = FindNodeDist(n1, node)
+        if dist < start_node_dist:
+            start_node_dist = dist
+            start_node = node
+        dist = FindNodeDist(n2, node)
+        if dist < end_node_dist:
+            end_node_dist = dist
+            end_node = node
+
+
+    return start_node, end_node

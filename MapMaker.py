@@ -28,10 +28,8 @@ def GenerateMap(num_nodes, num_edges, x_min, x_max, y_min, y_max):
             repeated = occupied[gen_y - y_min][gen_x - x_min] != -1
             if not repeated:
                 occupied[gen_y - y_min][gen_x - x_min] = i
-                nodes_list.append(Node(str(i), gen_x, gen_y))
-    
+                nodes_list.append(Node(i, gen_x, gen_y))
     # get n nearest nodes for each node
-    st = time.time()
     for node in nodes_list:
         current_id = int(node.id)
         nearest_found = 0
@@ -50,9 +48,6 @@ def GenerateMap(num_nodes, num_edges, x_min, x_max, y_min, y_max):
             if rel_x == rel_y or (rel_x < 0 and rel_x == -rel_y) or (rel_x > 0 and rel_x == 1-rel_y):
                 dx, dy = -dy, dx
             rel_x, rel_y = rel_x + dx, rel_y + dy
-
-    et = time.time()
-    print(et - st) # 0.03s for 1000 nodes, 0.077s for 5000 nodes, 0.21 for 10000 nodes
 
     # TODO: save map to file
 

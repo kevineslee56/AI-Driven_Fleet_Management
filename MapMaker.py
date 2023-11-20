@@ -29,7 +29,8 @@ def GenerateMap(num_nodes, num_edges, x_min, x_max, y_min, y_max):
             if not repeated:
                 occupied[gen_y - y_min][gen_x - x_min] = i
                 nodes_list.append(Node(i, gen_x, gen_y))
-    # get n nearest nodes for each node
+    # get n nearest nodes for each node. 
+    # TODO: chance of not fully connected graph, fix this
     for node in nodes_list:
         current_id = int(node.id)
         nearest_found = 0

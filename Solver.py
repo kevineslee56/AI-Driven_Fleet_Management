@@ -29,7 +29,36 @@ class Solver:
     def greed_solve(self):
         pass
 
+    def s1(self):
+        ''' 
+        dijkstra on start point, get shortest paths to each delivery
+            sum cost
+        for every delivery run dijkstra again, get shortest distance to every node
+        start with closest delivery point
+            within a thresh, find all nodes
+                for each node, if it is part of a path for another delivery, add
+        '''
     
+    def s2(self):
+        '''
+        dijkstra on start point, get shortest paths to each delivery
+            sum cost
+        for every delivery run dijkstra again, get shortest distance to every other delivery node
+        order delivery nodes by distance from start node
+
+
+        '''
+
+    def s3(self):
+        '''
+        split into even pie pieces
+        assign nodes to pie piece
+        for each pie piece:
+            for each node:
+                estimate cost of it staying in the piece vs moving to an adjacent piece
+        '''
+
+
     def cluster(self, num_clusters):
         # based on Hartigan-Wong variation of K-means clustering
         k = num_clusters

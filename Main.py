@@ -1,5 +1,6 @@
 import time
 import random
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgb
 from matplotlib.collections import LineCollection
@@ -10,12 +11,12 @@ from Solver import Solver
 from Truck import Truck
 
 def main():
-    num_nodes = 20000 # 200000
+    num_nodes = 100 # 200000
     num_neighbours = 4 # 4
     x_min = 0
-    x_max = 200 # 500
+    x_max = 250 # 500
     y_min = 0
-    y_max = 200 # 500
+    y_max = 250 # 500
     nodes_list = GenerateMap(num_nodes, num_neighbours, x_min, x_max, y_min, y_max)
 
     start_node, figure_ax = PlotMap(nodes_list)
@@ -59,9 +60,15 @@ def main():
         trucks.append(Truck(i, truck_capacity))
 
     st = time.time()
+    #pathPlanner.floyd_warshall()
     #solver = Solver(start_node=start_node, nodes_list=nodes_list, deliveries=deliveries, trucks=trucks)
+    dist = pathPlanner.delivery_dist(deliveries)
+    dist_estimate = pathPlanner.delivery_dist_estimate(deliveries)
+    error = dist_estimate - dist
+    print((np.sum(error))/(num_deliveries*num_deliveries))
     print(time.time() - st)
 
+    
 
     plt.show()
 

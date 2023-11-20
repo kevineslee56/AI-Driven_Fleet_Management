@@ -110,7 +110,49 @@ class PathPlanner:
                     pq.put(n)
                     self.nodes_prev_node[n.id] = curr_node
 
-    
+    def floyd_warshall(self):
+        dist = NODE_MAX_VALUE + np.zeros([self.num_nodes, self.num_nodes], dtype=np.float64)
+        print(dist)
+        for n1 in self.nodes_list:
+            i = int(n1.id)
+            for n2, cost in n1.adj_nodes:
+                j = int(n2.id)
+                dist[i][j] = cost
+            dist[i][i] = 0
+        for k in range(0, self.num_nodes):
+            for i in range(0, self.num_nodes):
+                for j in range(i, self.num_nodes):
+                    c = dist[i][k] + dist[k][j]
+                    if dist[i][j] > c:
+                        dist[i][j] = c
+                        dist[j][i] = c
+
+    def delivery_dist(self, delivery_nodes):
+        dist = NODE_MAX_VALUE + np.zeros([len(delivery_nodes), len(delivery_nodes)], dtype=np.float64)
+        for i in range(0, len(delivery_nodes) - 1):
+            n_from = delivery_nodes[i]
+            self.explore(n_from)
+            for j in range(i + 1, len(delivery_nodes)):
+                n_to = delivery_nodes[j]
+                cost = self.nodes_cost[int(n_to.id)]
+                dist[i][j] = cost
+                dist[j][i] = cost
+        return dist
+
+    def delivery_dist_estimate(self, delivery_nodes):
+        dist = NODE_MAX_VALUE + np.zeros([len(delivery_nodes), len(delivery_nodes)], dtype=np.float64)
+        for i in range(0, len(delivery_nodes) - 1):
+            n_from = delivery_nodes[i]
+            for j in range(i + 1, len(delivery_nodes)):
+                n_to = delivery_nodes[j]
+                cost = FindNodeDist(n_from, n_to)
+                dist[i][j] = cost
+                dist[j][i] = cost
+        return dist
+
+
+
+
 # once a truck has a set of nodes to deliver to, use tabu search or simulated annealing for pathing to each
 
 

@@ -1,5 +1,3 @@
-
-
 class Truck:
     def __init__(self, id, capacity):
         self.distance = 0
@@ -7,5 +5,3 @@ class Truck:
         self.destinations = []
         self.full_path = []
         self.packages = []
-
-    

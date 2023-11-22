@@ -1,6 +1,7 @@
 import time
 import random
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.colors import to_rgb
 from matplotlib.collections import LineCollection
 
@@ -8,9 +9,10 @@ from MapMaker import GenerateMap, PlotMap
 from PathPlanner import PathPlanner
 from Solver import Solver
 from Truck import Truck
+from HoverAnnotations import HoverAnnotation
 
 def main():
-    num_nodes = 20000 # 200000
+    num_nodes = 1000 # 200000
     num_neighbours = 4 # 4
     x_min = 0
     x_max = 200 # 500
@@ -18,7 +20,7 @@ def main():
     y_max = 200 # 500
     nodes_list = GenerateMap(num_nodes, num_neighbours, x_min, x_max, y_min, y_max)
 
-    start_node, figure_ax = PlotMap(nodes_list)
+    fig, start_node, figure_ax = PlotMap(nodes_list)
 
     num_deliveries = int(num_nodes/10)
     deliveries = random.sample(nodes_list, num_deliveries)
@@ -64,6 +66,19 @@ def main():
 
 
     plt.show()
+
+    #enable hover annotations
+
+    names = np.array(list("ABCDEFGHIJKLMNO"))
+    
+    annot = figure_ax.annotate("", xy=(0,0), xytext=(-20,20),textcoords="offset points",
+                    bbox=dict(boxstyle="round", fc="w"),
+                    arrowprops=dict(arrowstyle="->"))
+    annot.set_visible(False)
+
+    annotations = HoverAnnotation(line_collection, annot, names, figure_ax, fig)
+
+    fig.canvas.mpl_connect("motion_notify_event", annotations.hover)
 
 if __name__ == "__main__":
     main()

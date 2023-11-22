@@ -95,4 +95,4 @@ def PlotMap(nodes_list):
             start_node = node
 
 
-    return start_node, ax
+    return start_node, ax, fig

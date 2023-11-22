@@ -3,11 +3,10 @@ import random
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgb
 from matplotlib.collections import LineCollection
-from matplotlib.widgets import Button
 
 from MapMaker import GenerateMap, PlotMap
 from PathPlanner import PathPlanner
-from DeliveryPoints import AddDeliveryPoints
+from DeliveryPoints import AddDeliveryPoints, DeliveryPoints
 from Solver import Solver
 from Truck import Truck
 
@@ -20,11 +19,11 @@ def main():
     y_max = 200 # 500
     nodes_list = GenerateMap(num_nodes, num_neighbours, x_min, x_max, y_min, y_max)
 
-    start_node, figure_ax = PlotMap(nodes_list)
-    AddDeliveryPoints()
+    start_node, figure_ax, figure_fig = PlotMap(nodes_list)
+    #AddDeliveryPoints()
 
     num_deliveries = int(num_nodes/10)
-    deliveries = random.sample(nodes_list, num_deliveries)
+    deliveries = DeliveryPoints(nodes_list)
     for delivery_node in deliveries:
         delivery_node.is_delivery = True
 
@@ -53,8 +52,6 @@ def main():
 
     # plot "warehouse"
     figure_ax.scatter(start_node.x, start_node.y, marker='.', color='lime', s=50, zorder=15)
-    #figure_fig.canvas.draw_idle()
-    #figure_fig.canvas.flush_events()
 
     # trucks
     num_trucks = 10
@@ -70,9 +67,6 @@ def main():
     delivery_x = [node.x for node in deliveries]
     delivery_y = [node.y for node in deliveries]
     figure_ax.scatter(delivery_x, delivery_y, marker='.', color='magenta', s=[50 for node in deliveries], zorder=15)
-    # axcut = plt.axes([0.9, 0.0, 0.1, 0.075])
-    # bcut = Button(axcut, 'Done', color='red', hovercolor='green')
-
     plt.show()
 
 if __name__ == "__main__":

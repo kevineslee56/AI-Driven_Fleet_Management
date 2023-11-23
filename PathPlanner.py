@@ -1,10 +1,11 @@
-# A star (or any other path planning algorithm here)
-
 from Node import Node, FindNodeDist, NODE_MAX_VALUE
 
 import sys
-from queue import PriorityQueue
 import numpy as np
+from sys import maxsize 
+from queue import PriorityQueue
+from itertools import permutations
+
 
 class PathPlanner:
     def __init__(self, nodes_list):
@@ -24,8 +25,6 @@ class PathPlanner:
         self.current_start_node_id = -1
 
     def astar(self, start_node: Node, end_node: Node):
-        # separate f, g, h variables for larger maps? use matrices, np
-
         pq = PriorityQueue()
         if self.current_start_node_id != start_node.id:
             self.reset_graph()
@@ -67,31 +66,14 @@ class PathPlanner:
                 n = self.nodes_prev_node[n.id]
             path.insert(0, n)
         else:
-            #likely because it has not been found before, try working backwards
+            # likely because it has not been found before, try working backwards
             print("uh oh")
             pass
 
         return path, final_cost
     
-    # find shortest path between two nodes
-    def get_path(self, start_node: Node, end_node: Node):
-        if self.current_start_node_id != start_node.id:
-            self.explore()
-
-        path = []
-        final_cost = self.nodes_cost[end_node.id]
-        if final_cost < NODE_MAX_VALUE:
-            # found path
-            n = end_node
-            while n != start_node:
-                path.insert(0, n)
-                n = self.nodes_prev_node[n.id]
-            path.insert(0, n)
-
-        return path, final_cost
-    
     # dijkstra to explore every node from the start point
-    def explore(self, start_node: Node):
+    def dijkstra(self, start_node: Node):
         if self.current_start_node_id != start_node.id:
             self.reset_graph()
             self.current_start_node_id = start_node.id
@@ -110,7 +92,50 @@ class PathPlanner:
                     pq.put(n)
                     self.nodes_prev_node[n.id] = curr_node
 
+    # find shortest path between two nodes
+    def get_path(self, start_node: Node, end_node: Node):
+        if self.current_start_node_id != start_node.id:
+            self.dijkstra(start_node)
+
+        path = []
+        if self.nodes_cost[end_node.id] < NODE_MAX_VALUE:
+            # found path
+            n = end_node
+            while n != start_node:
+                path.insert(0, n)
+                n = self.nodes_prev_node[n.id]
+            path.insert(0, start_node)
+
+        return path, self.nodes_cost[end_node.id]
+ 
+    def tsp(self, start_node, delivery_nodes, paths_from_start_to_delivery, paths_from_delivery_to_delivery): 
+        min_cost = maxsize
+        best_path = []
+        next_permutations = permutations(delivery_nodes)
+        for i in next_permutations:
+            current_cost = 0
+            current_path = []
+            k = start_node
+            for j in i: 
+                cost = 0
+                path = []
+                if k == start_node:
+                    path, cost = paths_from_start_to_delivery[j.id] 
+                else:
+                    path, cost = paths_from_delivery_to_delivery[(k.id,j.id)]
+                
+                current_cost += cost
+                current_path.extend(path)
+                k = j 
+
+            path, cost = paths_from_start_to_delivery[k.id]
+            current_cost += cost
+            current_path.extend(reversed(path))
     
-# once a truck has a set of nodes to deliver to, use tabu search or simulated annealing for pathing to each
+            # update minimum 
+            if current_cost < min_cost:
+                min_cost = current_cost
+                best_path = current_path
 
-
+        return best_path, min_cost
+    

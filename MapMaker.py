@@ -4,6 +4,8 @@ import numpy as np
 from matplotlib.collections import LineCollection
 from matplotlib.colors import to_rgb
 import matplotlib.pyplot as plt
+import heapq
+from queue import Queue
 
 import time
 
@@ -15,41 +17,32 @@ def AddEdge(node1, node2):
         node2.adj_nodes.append((node1, dist))
 
 def GenerateMap(num_nodes, num_edges, x_min, x_max, y_min, y_max):
-    #num_nodes = int((x_max - x_min) * (y_max - y_min) * 0.2) # set num_nodes based on density desired
-   
-    # prevent nodes from being generated on the same point
-    occupied = -np.ones((y_max - y_min + 1, x_max - x_min + 1))
+    # Generate (num_nodes) nodes with unique coordinates
+    occupied_coordinates = set()
     nodes_list = []
     for i in range(num_nodes):
         repeated = True
         while repeated:
-            gen_x = random.randint(x_min, x_max)
-            gen_y = random.randint(y_min, y_max)
-            repeated = occupied[gen_y - y_min][gen_x - x_min] != -1
+            x = random.randint(x_min, x_max)
+            y = random.randint(y_min, y_max)
+            repeated = (x, y) in occupied_coordinates
             if not repeated:
-                occupied[gen_y - y_min][gen_x - x_min] = i
-                nodes_list.append(Node(i, gen_x, gen_y))
-    # get n nearest nodes for each node
+                occupied_coordinates.add((x, y))
+                nodes_list.append(Node(i, x, y))
+    
+    # Connect (num_edges) closest nodes to each node
     for node in nodes_list:
-        current_id = int(node.id)
-        nearest_found = 0
-        # loop in spiral
-        rel_x = rel_y = 0
-        dx = 0
-        dy = -1
-        while nearest_found < num_edges:
-            coord_x = node.x + rel_x
-            coord_y = node.y + rel_y
-            if (coord_x >= x_min) and (coord_x <= x_max) and (coord_y >= y_min) and (coord_y <= y_max):
-                other_node_id = int(occupied[coord_y][coord_x])
-                if (other_node_id != -1) and (other_node_id != current_id):
-                    nearest_found += 1
-                    AddEdge(node, nodes_list[other_node_id])
-            if rel_x == rel_y or (rel_x < 0 and rel_x == -rel_y) or (rel_x > 0 and rel_x == 1-rel_y):
-                dx, dy = -dy, dx
-            rel_x, rel_y = rel_x + dx, rel_y + dy
-
-    # TODO: save map to file
+        # Find (num_edges) closest nodes
+        closest_nodes = []
+        distances = []
+        for other_node in nodes_list:
+            if (other_node != node):
+                distances.append((FindNodeDist(node, other_node), other_node))
+        
+        # Add edges to those closest nodes
+        closest_nodes = heapq.nsmallest(num_edges, distances)
+        for dist,closest_node in closest_nodes:
+            AddEdge(node, closest_node)
 
     return nodes_list
 
@@ -93,6 +86,5 @@ def PlotMap(nodes_list):
         if dist < start_node_dist:
             start_node_dist = dist
             start_node = node
-
 
     return start_node, ax

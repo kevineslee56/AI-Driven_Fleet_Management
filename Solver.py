@@ -33,7 +33,3 @@ class Solver:
     def cluster(self, num_clusters):
         # based on Hartigan-Wong variation of K-means clustering
         k = num_clusters
-
-        
-
-    

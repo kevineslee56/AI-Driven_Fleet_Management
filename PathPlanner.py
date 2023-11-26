@@ -45,7 +45,8 @@ class PathPlanner:
 
         self.nodes_cost[start_node.id] = 0
         pq.put(start_node)
-        while not pq.empty():
+        reached_end = False
+        while not pq.empty() and (not reached_end):
             curr_node = pq.get()
             adjacentNodes = curr_node.adj_nodes
             for n, cost in adjacentNodes:
@@ -58,6 +59,8 @@ class PathPlanner:
                     self.nodes_f[n.id] = n.f
                     pq.put(n)
                     self.nodes_prev_node[n.id] = curr_node
+            if curr_node == end_node:
+                reached_end = True
 
         path = []
         final_cost = self.nodes_cost[end_node.id]

@@ -68,7 +68,7 @@ def main():
     all_neighbours_flag = True
 
     # plot "warehouse"
-    figure_ax.scatter(start_node.x, start_node.y, marker='.', color='lime', s=50, zorder=15)
+    figure_ax.scatter(start_node.x, start_node.y, marker='o', color='lime', s=50, zorder=15)
 
     # find solution:
     st = time.time()

@@ -122,7 +122,7 @@ class SolutionState:
         choices = [0, 1, 2, 3, 5]
         if not all_neighbours_flag:
             choices = [5, 5, 5, 5, 5]
-        choice = random.choices(population=choices, weights=[12.5, 12.5, 12.5, 12.5, 50], k=1)
+        choice = random.choices(population=choices, weights=[20, 20, 20, 20, 50], k=1)
         choice = choice[0]
         # move 1 node from 1 route to another 
         if choice == 0:

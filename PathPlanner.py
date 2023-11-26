@@ -23,6 +23,8 @@ class PathPlanner:
         self.nodes_prev_node = [Node] * self.num_nodes
         self.current_start_node_id = -1
 
+    
+
     def astar(self, start_node: Node, end_node: Node):
         # separate f, g, h variables for larger maps? use matrices, np
 
@@ -98,6 +100,7 @@ class PathPlanner:
 
         pq = PriorityQueue()
         self.nodes_cost[start_node.id] = 0
+        start_node.f = 0
         pq.put(start_node)
         while not pq.empty():
             curr_node = pq.get()
@@ -109,6 +112,7 @@ class PathPlanner:
                     n.f = total_cost
                     pq.put(n)
                     self.nodes_prev_node[n.id] = curr_node
+        return self.nodes_cost
 
     def floyd_warshall(self):
         dist = NODE_MAX_VALUE + np.zeros([self.num_nodes, self.num_nodes], dtype=np.float64)
@@ -143,16 +147,11 @@ class PathPlanner:
         dist = NODE_MAX_VALUE + np.zeros([len(delivery_nodes), len(delivery_nodes)], dtype=np.float64)
         for i in range(0, len(delivery_nodes) - 1):
             n_from = delivery_nodes[i]
-            for j in range(i + 1, len(delivery_nodes)):
+            for j in range(i, len(delivery_nodes)):
                 n_to = delivery_nodes[j]
                 cost = FindNodeDist(n_from, n_to)
                 dist[i][j] = cost
                 dist[j][i] = cost
         return dist
-
-
-
-
-# once a truck has a set of nodes to deliver to, use tabu search or simulated annealing for pathing to each
 
 

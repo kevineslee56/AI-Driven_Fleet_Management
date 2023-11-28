@@ -83,6 +83,7 @@ def PlotMap(nodes_list):
     ax.set_title('Generated Map')
 
     # select start and end:
+    print("left-click on a node to choose the warehouse")
     points = plt.ginput(1)
 
     start_node = None

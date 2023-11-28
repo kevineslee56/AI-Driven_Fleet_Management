@@ -8,8 +8,8 @@ delivery_points = []
 # User inputted delivery points - select points on the map (will show up as crosshairs) and right click when done
 def DeliveryPoints(nodes_list):
 
+    print("left-click on nodes to choose deliveries, right-click when done. To randomly generate deliveries, just right-click.")
     del_points = plt.ginput(-1,-1, True, mouse_stop=MouseButton.RIGHT)
-    print(del_points)
 
     for point in del_points:
         del_node = None

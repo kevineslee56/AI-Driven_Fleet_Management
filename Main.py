@@ -8,6 +8,7 @@ from matplotlib.collections import LineCollection
 
 from MapMaker import GenerateMap, PlotMap
 from PathPlanner import PathPlanner
+from DeliveryPoints import DeliveryPoints, RandomDeliveryPoints
 from Solver import Solver
 from Truck import Truck
 
@@ -47,7 +48,11 @@ def main():
 
     # problem/delivery properties:
     num_deliveries = 50 # suggested max 1000, for visibility, 50
-    deliveries = random.sample(nodes_list, num_deliveries)
+
+    deliveries = DeliveryPoints(nodes_list) # allow user to choose delivery nodes
+    if not deliveries: # if none chosen, use num_deliveries to randomly choose
+        deliveries = RandomDeliveryPoints(nodes_list, num_deliveries)
+
     for delivery_node in deliveries:
         delivery_node.is_delivery = True
     # trucks

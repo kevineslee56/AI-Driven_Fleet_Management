@@ -82,24 +82,27 @@ class SolutionState:
         
         result = None
 
-        choice = random.choice([0, 1, 2, 3])
+        if len(route) < 2:
+            print("oops")
 
-        # inverse order of deliveries between 2 random packages
-        if (choice == 0) and (len(route) >= 2):
-            new_route_cost, result = self.inverse_subroute(route, current_route_cost, current_temp)
-            self.route_costs[truck.id] = new_route_cost
-        # swap
-        elif (choice == 1) and (len(route) >= 2):
-            new_route_cost, result = self.swap_deliveries(route, current_route_cost, current_temp)
-            self.route_costs[truck.id] = new_route_cost
-        # move
-        elif (choice == 2) and (len(route) >= 2):
-            new_route_cost, result = self.move_delivery(route, current_route_cost, current_temp)
-            self.route_costs[truck.id] = new_route_cost
-        # move subroute
-        elif (choice == 3) and (len(route) >= 3):
-            new_route_cost, result = self.move_subroute(route, current_route_cost, current_temp) 
-            self.route_costs[truck.id] = new_route_cost
+        while result == None:
+            choice = random.choice([0, 1, 2, 3])
+            # inverse order of deliveries between 2 random packages
+            if (choice == 0) and (len(route) >= 2):
+                new_route_cost, result = self.inverse_subroute(route, current_route_cost, current_temp)
+                self.route_costs[truck.id] = new_route_cost
+            # swap
+            elif (choice == 1) and (len(route) >= 2):
+                new_route_cost, result = self.swap_deliveries(route, current_route_cost, current_temp)
+                self.route_costs[truck.id] = new_route_cost
+            # move
+            elif (choice == 2) and (len(route) >= 2):
+                new_route_cost, result = self.move_delivery(route, current_route_cost, current_temp)
+                self.route_costs[truck.id] = new_route_cost
+            # move subroute
+            elif (choice == 3) and (len(route) >= 3):
+                new_route_cost, result = self.move_subroute(route, current_route_cost, current_temp) 
+                self.route_costs[truck.id] = new_route_cost
         
         if result == SAME_COST:
             return SAME_COST
@@ -122,29 +125,33 @@ class SolutionState:
         choices = [0, 1, 2, 3, 5]
         if not all_neighbours_flag:
             choices = [5, 5, 5, 5, 5]
-        choice = random.choices(population=choices, weights=[20, 20, 20, 20, 50], k=1)
-        choice = choice[0]
-        # move 1 node from 1 route to another 
-        if choice == 0:
-            result = self.give_node(trucks, current_total_cost, current_temp)
-        # move a subroute from 1 route to another
-        elif choice == 1:
-            subchoice = random.uniform(0, 1)
-            result = self.give_subroute(trucks, current_total_cost, current_temp, subchoice < 0.5)
-        # swap 1 node from 1 route with another
-        elif choice == 2:
-            result = self.swap_nodes(trucks, current_total_cost, current_temp)
-        # swap subroutes (may be beneficial to determine an "optimal" subroute length)
-        elif choice == 3:
-            subchoice = random.uniform(0, 1)
-            result = self.swap_subroutes(trucks, current_total_cost, current_temp, subchoice < 0.5)
-        # split route into different lengths and randomly insert into other routes
-        elif choice == 4:
-            #result = self.split_route(trucks, current_total_cost, current_temp, True)
-            result = NO_NEW_SOLN
-        elif choice == 5:
-            truck = random.choice(trucks)
-            result = self.create_neighbour_route(truck, current_temp)
+
+        while result == None:
+            choice = random.choices(population=choices, weights=[20, 20, 20, 20, 50], k=1)
+            choice = choice[0]
+            # move 1 node from 1 route to another 
+            if choice == 0:
+                result = self.give_node(trucks, current_total_cost, current_temp)
+            # move a subroute from 1 route to another
+            elif choice == 1:
+                subchoice = random.uniform(0, 1)
+                result = self.give_subroute(trucks, current_total_cost, current_temp, subchoice < 0.5)
+            # swap 1 node from 1 route with another
+            elif choice == 2:
+                result = self.swap_nodes(trucks, current_total_cost, current_temp)
+            # swap subroutes (may be beneficial to determine an "optimal" subroute length)
+            elif choice == 3:
+                subchoice = random.uniform(0, 1)
+                result = self.swap_subroutes(trucks, current_total_cost, current_temp, subchoice < 0.5)
+            # split route into different lengths and randomly insert into other routes
+            elif choice == 4:
+                #result = self.split_route(trucks, current_total_cost, current_temp, True)
+                result = None
+            elif choice == 5 and (len([t1 for t1 in trucks if len(self.routes[t1.key]) >= 3]) > 0):
+                truck = random.choice(trucks)
+                while len(self.routes[truck.key]) < 3:
+                    truck = random.choice(trucks)
+                result = self.create_neighbour_route(truck, current_temp)
 
         if (result == NEW_SOLN) or (result == SAME_COST):
             self.neighbour_soln_weights[choice] = self.neighbour_soln_weights[choice] + 1
@@ -376,6 +383,8 @@ class SolutionState:
     def give_subroute(self, trucks, current_total_cost, current_temp, inverted):
         routes = self.routes
         route_costs = self.route_costs
+        if len([t1 for t1 in trucks if len(routes[t1.key]) >= 3]) < 1:
+            return None
 
         # choose giver route:
         t1 = random.choice(trucks)
@@ -469,6 +478,8 @@ class SolutionState:
     def swap_nodes(self, trucks, current_total_cost, current_temp):
         routes = self.routes
         route_costs = self.route_costs
+        if len([t1 for t1 in trucks if len(routes[t1.key]) >= 1]) < 2:
+            return None
 
         # choose first route:
         t1 = random.choice(trucks)
@@ -541,6 +552,8 @@ class SolutionState:
     def swap_subroutes(self, trucks, current_total_cost, current_temp, inverted):
         routes = self.routes
         route_costs = self.route_costs
+        if len([t1 for t1 in trucks if len(routes[t1.key]) >= 3]) < 2:
+            return None
 
         # choose first route:
         t1 = random.choice(trucks)

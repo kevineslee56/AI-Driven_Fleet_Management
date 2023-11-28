@@ -70,7 +70,6 @@ def main():
     stop_condition_2 = 150000
     max_iter = 1
     max_time_per_iter = 120
-    all_neighbours_flag = True
 
     # plot "warehouse"
     figure_ax.scatter(start_node.x, start_node.y, marker='o', color='lime', s=50, zorder=15)
@@ -79,7 +78,7 @@ def main():
     st = time.time()
     solver = Solver(start_node=start_node, nodes_list=nodes_list, deliveries=deliveries, trucks=trucks, x_range=[x_min, x_max], y_range=[y_min, y_max], w_dist=w_dist, w_time=w_time)
     # find list of lowest costs between all the delivery nodes
-    print("Analyzing graph, getting distance data between deliveries, estimate " + str(0.1*num_deliveries) + "s.")
+    print("Analyzing graph, getting distance data between deliveries, estimate " + str(0.1*len(deliveries)) + "s.")
     cost_dict = solver.find_costs() # takes about 2 min for 1000 deliveries
     
     print("Running Solver (limited to 4 min max runtime)...")
@@ -122,22 +121,12 @@ def main():
 
 
         segs = []
-        for i in range(0, len(truck.packages) - 1):
-            n1 = truck.packages[i]
-            n2 = truck.packages[i+1]
-            # TODO: for every segment, run astar and plot the path
-            if i == 0:
-                temp_path, path_cost = pathPlanner.astar(start_node, n1)
-                for j in range(0, len(temp_path) - 1):
-                    n3 = temp_path[j]
-                    n4 = temp_path[j+1]
-                    segs.append(((n3.x, n3.y),(n4.x, n4.y)))
-            if i == len(truck.packages) - 2:
-                temp_path, path_cost = pathPlanner.astar(n2, start_node)
-                for j in range(0, len(temp_path) - 1):
-                    n3 = temp_path[j]
-                    n4 = temp_path[j+1]
-                    segs.append(((n3.x, n3.y),(n4.x, n4.y)))
+        truck_node_order = [*truck.packages]
+        truck_node_order.insert(0, start_node)
+        truck_node_order.append(start_node)
+        for i in range(0, len(truck_node_order)-1):
+            n1 = truck_node_order[i]
+            n2 = truck_node_order[i+1]
             temp_path, path_cost = pathPlanner.astar(n1, n2)
             for j in range(0, len(temp_path) - 1):
                 n3 = temp_path[j]

@@ -26,8 +26,7 @@ def DeliveryPoints(nodes_list):
     return delivery_points
 
 # If the user does not select any points (right-click after selecting warehouse point)
-def RandomDeliveryPoints(nodes_list, num_nodes):
-    num_deliveries = int(num_nodes/10)
+def RandomDeliveryPoints(nodes_list, num_deliveries):
     delivery_points = random.sample(nodes_list, num_deliveries)
     return delivery_points
 

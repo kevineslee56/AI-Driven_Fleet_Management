@@ -29,19 +29,7 @@ class PathPlanner:
         # separate f, g, h variables for larger maps? use matrices, np
 
         pq = PriorityQueue()
-        if self.current_start_node_id != start_node.id:
-            self.reset_graph()
-            self.current_start_node_id = start_node.id
-
-        if self.nodes_cost[end_node.id] < NODE_MAX_VALUE:
-            # path has already been found before
-            path = []
-            n = end_node
-            while n != start_node:
-                path.insert(0, n)
-                n = self.nodes_prev_node[n.id]
-            path.insert(0, n)
-            return path, self.nodes_cost[end_node.id]
+        self.reset_graph()
 
         self.nodes_cost[start_node.id] = 0
         pq.put(start_node)

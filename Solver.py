@@ -161,10 +161,10 @@ class Solver:
     def simulated_annealing(self, init_T, a1, a2, max_iter, max_iter_time=120, initial_trucks=None, all_neighbours_flag=True):
         if initial_trucks == None:
             # quick method of clustering for the initial solution
-            initial_trucks = self.concurrent_even_split()
-        
-            # or use random assignment:
-            #initial_trucks = self.random_routes()
+            if all_neighbours_flag:
+                initial_trucks = self.random_routes()
+            else:
+                initial_trucks = self.concurrent_even_split()
 
         initial_routes = {}
         for truck in initial_trucks:

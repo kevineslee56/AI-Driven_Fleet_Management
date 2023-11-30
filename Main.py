@@ -1,5 +1,6 @@
 import time
 import random
+import pickle
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgb
 from matplotlib.collections import LineCollection
@@ -10,6 +11,8 @@ from DeliveryPoints import DeliveryPoints, RandomDeliveryPoints
 from Solver import Solver
 from Truck import Truck
 
+USE_EXISTING_MAP = False
+
 def main():
     num_nodes = 200 # 200000
     num_neighbours = 4 # 4
@@ -17,15 +20,28 @@ def main():
     x_max = 200 # 500
     y_min = 0
     y_max = 200 # 500
-    nodes_list = GenerateMap(num_nodes, num_neighbours, x_min, x_max, y_min, y_max)
-    start_node, figure_ax, figure_fig = PlotMap(nodes_list)
 
-    deliveries = DeliveryPoints(nodes_list)
-    if not deliveries:
-        deliveries = RandomDeliveryPoints(nodes_list, num_nodes)
+    if (USE_EXISTING_MAP):
+        with open('map_lines.pickle', 'rb') as input_lines, open('map_nodes.pickle', 'rb') as input_nodes, open('map_start.pickle', 'rb') as input_start, open('deliveries.pickle', 'rb') as input_deliveries:
+            figure_ax = pickle.load(input_lines)
+            start_node = pickle.load(input_start)
+            nodes_list = pickle.load(input_nodes)
+            deliveries = pickle.load(input_deliveries)
+    else:
+        nodes_list = GenerateMap(num_nodes, num_neighbours, x_min, x_max, y_min, y_max)
+        start_node, figure_ax = PlotMap(nodes_list)
 
-    for delivery_node in deliveries:
-        delivery_node.is_delivery = True
+        deliveries = DeliveryPoints(nodes_list)
+        if not deliveries:
+            deliveries = RandomDeliveryPoints(nodes_list, num_nodes)
+
+        for delivery_node in deliveries:
+            delivery_node.is_delivery = True
+        
+        # saving deliveries 
+        delivery_file = open('deliveries.pickle', 'wb')
+        pickle.dump(deliveries, delivery_file)
+        delivery_file.close()
 
     pathPlanner = PathPlanner(nodes_list)
 

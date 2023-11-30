@@ -1,5 +1,7 @@
 from Node import Node, FindNodeDist
 import random
+import pickle
+import csv
 import numpy as np
 from matplotlib.collections import LineCollection
 from matplotlib.colors import to_rgb
@@ -75,6 +77,7 @@ def PlotMap(nodes_list):
                     continue
             segs.append(((node.x, node.y),(sub_node.x, sub_node.y)))
     line_collection = LineCollection(segs, linewidths=[0.5], colors=to_rgb('green'), zorder=0)
+    print('lines: ', line_collection)
     ax.add_collection(line_collection)
 
     ax.set_xlabel('X-axis')
@@ -94,5 +97,9 @@ def PlotMap(nodes_list):
             start_node_dist = dist
             start_node = node
 
+    with  open('map_lines.pickle', 'wb') as linefile, open('map_nodes.pickle', 'wb') as nodesfile, open('map_start.pickle', 'wb') as startfile:
+        pickle.dump(start_node, startfile)
+        pickle.dump(nodes_list, nodesfile)
+        pickle.dump(ax, linefile)
 
-    return start_node, ax, fig
+    return start_node, ax

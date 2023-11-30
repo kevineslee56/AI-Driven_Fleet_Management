@@ -10,6 +10,7 @@ from DeliveryPoints import DeliveryPoints, RandomDeliveryPoints
 from Solver import Solver
 from Truck import Truck
 from Config import Config
+from HoverAnnotations import HoverAnnotation
 
 # helper functions for verifying solution costs
 def get_route_dist(start_node, route, cost_dict):
@@ -42,7 +43,7 @@ def main(conf: Config):
     y_min = conf.y_min
     y_max = conf.y_max
     nodes_list = GenerateMap(num_nodes, num_neighbours, x_min, x_max, y_min, y_max)
-    start_node, figure_ax = PlotMap(nodes_list)
+    fig, start_node, figure_ax = PlotMap(nodes_list)
     pathPlanner = PathPlanner(nodes_list)
 
     # problem/delivery properties:
@@ -119,6 +120,9 @@ def main(conf: Config):
     delivery_colour = []
     # plot truck routes
     truck_i = 0
+    truck_line_collection = []
+    truck_route_distances = []
+    truck_route_no_deliveries = []
     for truck in clustered_trucks:
         color = delivery_colours[truck_i]
         truck_i = truck_i + 1
@@ -126,13 +130,14 @@ def main(conf: Config):
             delivery_x.append(package.x)
             delivery_y.append(package.y)
             delivery_colour.append(color)
-        figure_ax.scatter(delivery_x, delivery_y, marker="o", color=delivery_colour, s=[30 for dummy in delivery_x], zorder=15)
-        delivery_x = []
-        delivery_y = []
-        delivery_colour = []
+        sc = figure_ax.scatter(delivery_x, delivery_y, marker="o", color=delivery_colour, s=[30 for dummy in delivery_x], zorder=15)
+        #delivery_x = []
+        #delivery_y = []
+        #delivery_colour = []
 
 
         segs = []
+        route_dist = 0
         truck_node_order = [*truck.packages]
         truck_node_order.insert(0, start_node)
         truck_node_order.append(start_node)
@@ -140,16 +145,29 @@ def main(conf: Config):
             n1 = truck_node_order[i]
             n2 = truck_node_order[i+1]
             temp_path, path_cost = pathPlanner.astar(n1, n2)
+            route_dist += path_cost
             for j in range(0, len(temp_path) - 1):
                 n3 = temp_path[j]
                 n4 = temp_path[j+1]
                 segs.append(((n3.x, n3.y),(n4.x, n4.y)))
-        line_collection = LineCollection(segs, linewidths=[1.5], colors=to_rgb(color), zorder=10)
-        figure_ax.add_collection(line_collection)
+        line_collection = LineCollection(segs, linewidths=[1.5], colors=to_rgb(color), zorder=9)
+        truck_line_collection.append(figure_ax.add_collection(line_collection))
+        truck_route_distances.append(path_cost)
+        truck_route_no_deliveries.append(len(truck.packages))
 
     print("solution found in " + str(time.time() - st) + " seconds.")
 
-    
+    #enable hover annotations
+    annot = figure_ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
+                    bbox=dict(boxstyle="round", fc=(1,1,1,1), ec=(0,0,0,1)),
+                    arrowprops=dict(arrowstyle="->"),zorder=20)
+    annot.set_visible(False)
+
+    annotations = HoverAnnotation(sc, truck_line_collection, truck_route_distances, truck_route_no_deliveries, annot, figure_ax, fig, delivery_x, delivery_y)
+
+    fig.canvas.mpl_connect("motion_notify_event", annotations.hover)
+
+    fig.canvas.mpl_connect("button_press_event", annotations.click)
 
     plt.show()
 

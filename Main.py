@@ -11,6 +11,7 @@ from Solver import Solver
 from Truck import Truck
 from MapReadWrite import read_existing_map, write_existing_map
 from Config import Config
+from HoverAnnotations import HoverAnnotation
 
 # helper functions for verifying solution costs
 def get_route_dist(start_node, route, cost_dict):
@@ -142,6 +143,9 @@ def main(conf: Config):
     delivery_colour = []
     # plot truck routes
     truck_i = 0
+
+    solution_path_info = []
+
     for truck in clustered_trucks:
         color = delivery_colours[truck_i]
         truck_i = truck_i + 1
@@ -149,13 +153,16 @@ def main(conf: Config):
             delivery_x.append(package.x)
             delivery_y.append(package.y)
             delivery_colour.append(color)
-        figure_ax.scatter(delivery_x, delivery_y, marker="o", color=delivery_colour, s=[30 for dummy in delivery_x], zorder=15)
+        if len(delivery_x) > 0:
+            sc = figure_ax.scatter(delivery_x, delivery_y, marker="o", color=delivery_colour, s=[30 for dummy in delivery_x], zorder=15)
         delivery_x = []
         delivery_y = []
         delivery_colour = []
 
 
         segs = []
+        seq_path_costs = []
+        route_dist = 0
         truck_node_order = [*truck.packages]
         truck_node_order.insert(0, start_node)
         truck_node_order.append(start_node)
@@ -163,16 +170,24 @@ def main(conf: Config):
             n1 = truck_node_order[i]
             n2 = truck_node_order[i+1]
             temp_path, path_cost = pathPlanner.astar(n1, n2)
+            route_dist += path_cost
+            seq_path_costs.append(route_dist)
             for j in range(0, len(temp_path) - 1):
                 n3 = temp_path[j]
                 n4 = temp_path[j+1]
                 segs.append(((n3.x, n3.y),(n4.x, n4.y)))
-        line_collection = LineCollection(segs, linewidths=[1.5], colors=to_rgb(color), zorder=10)
-        figure_ax.add_collection(line_collection)
+        if len(segs) > 0:
+            line_collection = LineCollection(segs, linewidths=[1.5], colors=to_rgb(color), zorder=9)
+            path_info = [figure_ax.add_collection(line_collection), route_dist, len(truck.packages), seq_path_costs, sc]
+            solution_path_info.append(path_info)
 
     print("solution found in " + str(time.time() - st) + " seconds.")
 
-    
+    annotations = HoverAnnotation(solution_path_info, figure_ax, figure)
+
+    figure.canvas.mpl_connect("motion_notify_event", annotations.hover)
+
+    figure.canvas.mpl_connect("button_press_event", annotations.click)
 
     plt.show()
 

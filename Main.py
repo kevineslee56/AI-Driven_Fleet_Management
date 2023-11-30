@@ -11,6 +11,7 @@ from PathPlanner import PathPlanner
 from DeliveryPoints import DeliveryPoints, RandomDeliveryPoints
 from Solver import Solver
 from Truck import Truck
+from Config import Config
 
 # helper functions for verifying solution costs
 def get_route_dist(start_node, route, cost_dict):
@@ -34,20 +35,20 @@ def cost_checker(start_node, trucks, cost_dict, w_dist, w_time):
     return (total_dist * w_dist) + (longest_route_dist * w_time)
 
 
-def main():
+def main(conf: Config):
     # graph properties:
-    num_nodes = 500 # suggested max: 10000, for visibility, 500
-    num_neighbours = 4 # suggested for all sized maps: 4-6 (less dense graphs, use higher numbers)
-    x_min = 0
-    x_max = 350 # suggested max 350
-    y_min = 0
-    y_max = 350 # suggested max 350
+    num_nodes = conf.num_nodes
+    num_neighbours = conf.num_neighbours
+    x_min = conf.x_min
+    x_max = conf.x_max
+    y_min = conf.y_min
+    y_max = conf.y_max
     nodes_list = GenerateMap(num_nodes, num_neighbours, x_min, x_max, y_min, y_max)
     start_node, figure_ax = PlotMap(nodes_list)
     pathPlanner = PathPlanner(nodes_list)
 
     # problem/delivery properties:
-    num_deliveries = 50 # suggested max 1000, for visibility, 50
+    num_deliveries = conf.num_deliveries
 
     deliveries = DeliveryPoints(nodes_list) # allow user to choose delivery nodes
     if not deliveries: # if none chosen, use num_deliveries to randomly choose
@@ -57,20 +58,20 @@ def main():
     for delivery_node in deliveries:
         delivery_node.is_delivery = True
     # trucks
-    num_trucks = 10 # suggested max 10
+    num_trucks = conf.num_trucks
     trucks = []
-    truck_capacity = 10000000
+    truck_capacity = conf.truck_capacity
     for i in range(0, num_trucks):
         trucks.append(Truck(i, truck_capacity))
 
     # solver properties:
-    w_dist = 0.5
-    w_time = 0.5 * (num_trucks/2) # approximate adjustment to account for total distance usually being a few times larger than the longest route
-    initial_temp = 10000
-    stop_condition_1 = 20000
-    stop_condition_2 = 150000
-    max_iter = 1
-    max_time_per_iter = 120
+    w_dist = conf.w_dist
+    w_time = conf.w_time * (num_trucks/2) # approximate adjustment to account for total distance usually being a few times larger than the longest route
+    initial_temp = conf.initial_temp
+    stop_condition_1 = conf.stop_condition_1
+    stop_condition_2 = conf.stop_condition_2
+    max_iter = conf.max_iter 
+    max_time_per_iter = conf.max_time_per_iter
 
     # plot "warehouse"
     figure_ax.scatter(start_node.x, start_node.y, marker='o', color='lime', s=50, zorder=15)
@@ -82,12 +83,13 @@ def main():
     print("Analyzing graph, getting distance data between deliveries, estimate " + str(0.1*num_deliveries) + "s.")
     cost_dict = solver.find_costs() # takes about 2 min for 1000 deliveries
     
-    print("Running Solver (limited to 4 min max runtime)...")
     if len(deliveries) > 275:
         # first cluster, then TSP
+        print("Running Solver (limited to " + str(max_time_per_iter) + " seconds max runtime)...")
         clustered_trucks, cost, total_dist, longest_route = solver.simulated_annealing(initial_temp, stop_condition_1, stop_condition_2, max_iter, max_time_per_iter, all_neighbours_flag=False)
     else:
         # just run simulated annealing normally
+        print("Running Solver (limited to " + str(max_time_per_iter*2) + " seconds max runtime)...")
         clustered_trucks, cost, total_dist, longest_route = solver.simulated_annealing(initial_temp, stop_condition_1*(275/len(deliveries)), stop_condition_2*5, max_iter, max_time_per_iter*2, all_neighbours_flag=True)
         
     # solution results
@@ -143,4 +145,5 @@ def main():
     plt.show()
 
 if __name__ == "__main__":
-    main()
+    config = Config()
+    main(config)

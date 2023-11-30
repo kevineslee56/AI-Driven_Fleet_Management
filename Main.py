@@ -1,6 +1,5 @@
 import time
 import math
-import pickle
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgb
 from matplotlib.collections import LineCollection
@@ -39,9 +38,10 @@ def main(conf: Config):
     # graph properties:
     USE_EXISTING_MAP = conf.USE_EXISTING_MAP
     map_loaded, nodes_list, start_node, deliveries, map_ranges = read_existing_map(USE_EXISTING_MAP)
+    figure = None
     figure_ax = None
     if map_loaded:
-        figure_ax = PlotMap(nodes_list)
+        figure, figure_ax = PlotMap(nodes_list)
 
     x_min = map_ranges[0]
     x_max = map_ranges[1]
@@ -57,7 +57,7 @@ def main(conf: Config):
         y_min = conf.y_min
         y_max = conf.y_max
         nodes_list = GenerateMap(num_nodes, num_neighbours, x_min, x_max, y_min, y_max)
-        figure_ax = PlotMap(nodes_list)
+        figure, figure_ax = PlotMap(nodes_list)
         start_node = choose_start(nodes_list)
         # problem/delivery properties:
         num_deliveries = conf.num_deliveries
@@ -68,8 +68,10 @@ def main(conf: Config):
     
     num_deliveries = len(deliveries)
 
-    # save map
-    write_existing_map(nodes_list, deliveries, start_node, [x_min, x_max, y_min, y_max])
+    if not map_loaded:
+        # save map
+        print("saving map...")
+        write_existing_map(nodes_list, deliveries, start_node, [x_min, x_max, y_min, y_max])
     
 
     pathPlanner = PathPlanner(nodes_list)
@@ -123,8 +125,6 @@ def main(conf: Config):
             print("Running Solver (limited to " + str(max_time_per_iter*2) + " seconds max runtime)...")
             clustered_trucks, cost, total_dist, longest_route = solver.simulated_annealing(initial_temp, stop_condition_1*(275/len(deliveries)), stop_condition_2*5, max_iter, max_time_per_iter*2, all_neighbours_flag=True)
     # sanity check of solution
-    print(cost)
-    print(cost_checker(start_node, clustered_trucks, cost_dict, w_dist, w_time))
     assert(math.isclose(cost, cost_checker(start_node, clustered_trucks, cost_dict, w_dist, w_time)))
     
     # solution results

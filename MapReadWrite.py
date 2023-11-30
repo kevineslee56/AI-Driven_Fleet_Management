@@ -29,6 +29,7 @@ def read_existing_map(USE_EXISTING_MAP):
         except:
             return False, None, None, None, [0, 0, 0, 0]
         else:
+            print("loading map...")
             try:
                 line = f.readline()
                 map_ranges = line.split(",")

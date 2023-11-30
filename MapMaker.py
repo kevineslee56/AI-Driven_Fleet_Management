@@ -80,7 +80,7 @@ def PlotMap(nodes_list):
     ax.set_ylabel('Y-axis')
     ax.set_title('Generated Map')
 
-    return ax
+    return fig, ax
 
 def choose_start(nodes_list):
     # select start and end:

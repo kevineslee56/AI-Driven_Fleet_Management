@@ -79,7 +79,7 @@ def main():
     st = time.time()
     solver = Solver(start_node=start_node, nodes_list=nodes_list, deliveries=deliveries, trucks=trucks, x_range=[x_min, x_max], y_range=[y_min, y_max], w_dist=w_dist, w_time=w_time)
     # find list of lowest costs between all the delivery nodes
-    print("Analyzing graph, getting distance data between deliveries, estimate " + str(0.1*len(deliveries)) + "s.")
+    print("Analyzing graph, getting distance data between deliveries, estimate " + str(0.1*num_deliveries) + "s.")
     cost_dict = solver.find_costs() # takes about 2 min for 1000 deliveries
     
     print("Running Solver (limited to 4 min max runtime)...")

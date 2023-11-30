@@ -661,7 +661,7 @@ class SolutionState:
             r1[n5:n5] = subroute2
             r2[n6:n6] = subroute1
 
-            # test
+            '''# test
             test_cost_r1 = self.get_route_cost(r1)
             if not math.isclose(new_r1_cost, test_cost_r1):
                 print("swap subroute (r1) wrong cost")
@@ -671,7 +671,7 @@ class SolutionState:
                 print("swap subroute (r2) wrong cost")
                 new_r2_cost = test_cost_r2
             route_costs[t1.id] = new_r1_cost
-            route_costs[t2.id] = new_r2_cost
+            route_costs[t2.id] = new_r2_cost'''
 
             self.longest_route_cost = longest
             self.total_distance_cost = new_total_dist

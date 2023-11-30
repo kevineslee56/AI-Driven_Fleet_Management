@@ -28,10 +28,5 @@ class Truck:
         self.delivery_nodes = []
         self.packages = []
 
-    def _is_valid_operand(self, other_truck):
-        return (hasattr(other_truck, "id"))
-
     def __eq__(self, other):
-        if not self._is_valid_operand(other):
-            return NotImplemented
-        return self.id == other.id
+        return (self.id == other.id) and (self.capacity == other.capacity)

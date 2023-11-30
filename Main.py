@@ -1,7 +1,5 @@
 import time
 import math
-import random
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgb
 from matplotlib.collections import LineCollection

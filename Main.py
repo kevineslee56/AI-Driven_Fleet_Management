@@ -52,6 +52,7 @@ def main():
     deliveries = DeliveryPoints(nodes_list) # allow user to choose delivery nodes
     if not deliveries: # if none chosen, use num_deliveries to randomly choose
         deliveries = RandomDeliveryPoints(nodes_list, num_deliveries)
+    num_deliveries = len(deliveries)
 
     for delivery_node in deliveries:
         delivery_node.is_delivery = True

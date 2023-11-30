@@ -50,8 +50,6 @@ def GenerateMap(num_nodes, num_edges, x_min, x_max, y_min, y_max):
                 dx, dy = -dy, dx
             rel_x, rel_y = rel_x + dx, rel_y + dy
 
-    # TODO: save map to file
-
     return nodes_list
 
 def PlotMap(nodes_list):
@@ -82,6 +80,9 @@ def PlotMap(nodes_list):
     ax.set_ylabel('Y-axis')
     ax.set_title('Generated Map')
 
+    return ax
+
+def choose_start(nodes_list):
     # select start and end:
     print("left-click on a node to choose the warehouse")
     points = plt.ginput(1)
@@ -95,6 +96,4 @@ def PlotMap(nodes_list):
         if dist < start_node_dist:
             start_node_dist = dist
             start_node = node
-
-
-    return start_node, ax
+    return start_node

@@ -2,6 +2,9 @@ class Config:
     def __init__(self):
 
         '''map generation configuration'''
+        # whether or not we should try to load an existing map
+        self.USE_EXISTING_MAP = True
+
         # number of nodes/vertices in the graph structure:
         self.num_nodes = 500                # suggested max: 10000, for visibility, 500
 
@@ -16,7 +19,7 @@ class Config:
 
         '''problem configuration'''
         # number of deliveries (for random generation option)
-        self.num_deliveries = 50            # suggested max 1000, for visibility, 50
+        self.num_deliveries = 10            # suggested max 1000, for visibility, 50
 
         # number of available trucks:
         self.num_trucks = 10                # suggested max 10

@@ -1,14 +1,16 @@
 import time
 import math
+import pickle
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgb
 from matplotlib.collections import LineCollection
 
-from MapMaker import GenerateMap, PlotMap
+from MapMaker import GenerateMap, PlotMap, choose_start
 from PathPlanner import PathPlanner
 from DeliveryPoints import DeliveryPoints, RandomDeliveryPoints
 from Solver import Solver
 from Truck import Truck
+from MapReadWrite import read_existing_map, write_existing_map
 from Config import Config
 
 # helper functions for verifying solution costs
@@ -35,23 +37,42 @@ def cost_checker(start_node, trucks, cost_dict, w_dist, w_time):
 
 def main(conf: Config):
     # graph properties:
-    num_nodes = conf.num_nodes
-    num_neighbours = conf.num_neighbours
-    x_min = conf.x_min
-    x_max = conf.x_max
-    y_min = conf.y_min
-    y_max = conf.y_max
-    nodes_list = GenerateMap(num_nodes, num_neighbours, x_min, x_max, y_min, y_max)
-    start_node, figure_ax = PlotMap(nodes_list)
-    pathPlanner = PathPlanner(nodes_list)
+    USE_EXISTING_MAP = conf.USE_EXISTING_MAP
+    map_loaded, nodes_list, start_node, deliveries, map_ranges = read_existing_map(USE_EXISTING_MAP)
+    figure_ax = None
+    if map_loaded:
+        figure_ax = PlotMap(nodes_list)
 
-    # problem/delivery properties:
-    num_deliveries = conf.num_deliveries
+    x_min = map_ranges[0]
+    x_max = map_ranges[1]
+    y_min = map_ranges[2]
+    y_max = map_ranges[3]
+    num_deliveries = 0
 
-    deliveries = DeliveryPoints(nodes_list) # allow user to choose delivery nodes
-    if not deliveries: # if none chosen, use num_deliveries to randomly choose
-        deliveries = RandomDeliveryPoints(nodes_list, num_deliveries, start_node)
+    if not map_loaded:
+        num_nodes = conf.num_nodes
+        num_neighbours = conf.num_neighbours
+        x_min = conf.x_min
+        x_max = conf.x_max
+        y_min = conf.y_min
+        y_max = conf.y_max
+        nodes_list = GenerateMap(num_nodes, num_neighbours, x_min, x_max, y_min, y_max)
+        figure_ax = PlotMap(nodes_list)
+        start_node = choose_start(nodes_list)
+        # problem/delivery properties:
+        num_deliveries = conf.num_deliveries
+
+        deliveries = DeliveryPoints(nodes_list) # allow user to choose delivery nodes
+        if not deliveries: # if none chosen, use num_deliveries to randomly choose
+            deliveries = RandomDeliveryPoints(nodes_list, num_deliveries, start_node)
+    
     num_deliveries = len(deliveries)
+
+    # save map
+    write_existing_map(nodes_list, deliveries, start_node, [x_min, x_max, y_min, y_max])
+    
+
+    pathPlanner = PathPlanner(nodes_list)
 
     for delivery_node in deliveries:
         delivery_node.is_delivery = True
@@ -102,6 +123,8 @@ def main(conf: Config):
             print("Running Solver (limited to " + str(max_time_per_iter*2) + " seconds max runtime)...")
             clustered_trucks, cost, total_dist, longest_route = solver.simulated_annealing(initial_temp, stop_condition_1*(275/len(deliveries)), stop_condition_2*5, max_iter, max_time_per_iter*2, all_neighbours_flag=True)
     # sanity check of solution
+    print(cost)
+    print(cost_checker(start_node, clustered_trucks, cost_dict, w_dist, w_time))
     assert(math.isclose(cost, cost_checker(start_node, clustered_trucks, cost_dict, w_dist, w_time)))
     
     # solution results

@@ -2,9 +2,11 @@
 
 from Node import Node, FindNodeDist, NODE_MAX_VALUE
 
-import sys
+import numpy as np
+from sys import maxsize 
 from queue import PriorityQueue
 import numpy as np
+from itertools import permutations
 
 class PathPlanner:
     def __init__(self, nodes_list):
@@ -69,7 +71,7 @@ class PathPlanner:
     # find shortest path between two nodes
     def get_path(self, start_node: Node, end_node: Node):
         if self.current_start_node_id != start_node.id:
-            self.explore()
+            self.explore(start_node)
 
         path = []
         final_cost = self.nodes_cost[end_node.id]
@@ -105,23 +107,6 @@ class PathPlanner:
                     self.nodes_prev_node[n.id] = curr_node
         return self.nodes_cost
 
-    def floyd_warshall(self):
-        dist = NODE_MAX_VALUE + np.zeros([self.num_nodes, self.num_nodes], dtype=np.float64)
-        print(dist)
-        for n1 in self.nodes_list:
-            i = int(n1.id)
-            for n2, cost in n1.adj_nodes:
-                j = int(n2.id)
-                dist[i][j] = cost
-            dist[i][i] = 0
-        for k in range(0, self.num_nodes):
-            for i in range(0, self.num_nodes):
-                for j in range(i, self.num_nodes):
-                    c = dist[i][k] + dist[k][j]
-                    if dist[i][j] > c:
-                        dist[i][j] = c
-                        dist[j][i] = c
-
     def delivery_dist(self, delivery_nodes):
         dist = NODE_MAX_VALUE + np.zeros([len(delivery_nodes), len(delivery_nodes)], dtype=np.float64)
         for i in range(0, len(delivery_nodes) - 1):
@@ -144,5 +129,32 @@ class PathPlanner:
                 dist[i][j] = cost
                 dist[j][i] = cost
         return dist
+    
+    # tsp used by brute force solver
+    def tsp(self, start_node, delivery_nodes, cost_dict): 
+        min_cost = maxsize
+        best_permutation = []
+        next_permutations = permutations(delivery_nodes)
+        for i in next_permutations:
+            current_cost = 0
+            k = start_node
+            for j in i: 
+                cost = 0
+                if k == start_node:
+                    cost = cost_dict[start_node.key + ":" + j.key] 
+                else:
+                    cost = cost_dict[k.key + ":" + j.key]
+                
+                current_cost += cost
+                k = j 
 
+            cost = cost_dict[start_node.key + ":" + k.key]
+            current_cost += cost
+    
+            # update minimum 
+            if current_cost < min_cost:
+                min_cost = current_cost
+                best_permutation = i
+
+        return min_cost, best_permutation
 

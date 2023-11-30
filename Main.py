@@ -50,7 +50,7 @@ def main(conf: Config):
 
     deliveries = DeliveryPoints(nodes_list) # allow user to choose delivery nodes
     if not deliveries: # if none chosen, use num_deliveries to randomly choose
-        deliveries = RandomDeliveryPoints(nodes_list, num_deliveries)
+        deliveries = RandomDeliveryPoints(nodes_list, num_deliveries, start_node)
     num_deliveries = len(deliveries)
 
     for delivery_node in deliveries:
@@ -77,21 +77,34 @@ def main(conf: Config):
     # find solution:
     st = time.time()
     solver = Solver(start_node=start_node, nodes_list=nodes_list, deliveries=deliveries, trucks=trucks, x_range=[x_min, x_max], y_range=[y_min, y_max], w_dist=w_dist, w_time=w_time)
+
+    # results required from solver
+    clustered_trucks = []
+    cost = -1
+    total_dist = -1
+    longest_route = -1
+
     # find list of lowest costs between all the delivery nodes
     print("Analyzing graph, getting distance data between deliveries, estimate " + str(0.1*num_deliveries) + "s.")
     cost_dict = solver.find_costs() # takes about 2 min for 1000 deliveries
-    
-    if len(deliveries) > 275:
-        # first cluster, then TSP
-        print("Running Solver (limited to " + str(max_time_per_iter) + " seconds max runtime)...")
-        clustered_trucks, cost, total_dist, longest_route = solver.simulated_annealing(initial_temp, stop_condition_1, stop_condition_2, max_iter, max_time_per_iter, all_neighbours_flag=False)
+
+    # condition for using brute force solver:
+    if (len(nodes_list) <= 1000) and (len(deliveries) <= 10):
+        clustered_trucks, cost, total_dist, longest_route = solver.brute_force(truck_capacity)
+    # use simulated annealing:
     else:
-        # just run simulated annealing normally
-        print("Running Solver (limited to " + str(max_time_per_iter*2) + " seconds max runtime)...")
-        clustered_trucks, cost, total_dist, longest_route = solver.simulated_annealing(initial_temp, stop_condition_1*(275/len(deliveries)), stop_condition_2*5, max_iter, max_time_per_iter*2, all_neighbours_flag=True)
-        
-    # solution results
+        if len(deliveries) > 275:
+            # first cluster, then TSP
+            print("Running Solver (limited to " + str(max_time_per_iter) + " seconds max runtime)...")
+            clustered_trucks, cost, total_dist, longest_route = solver.simulated_annealing(initial_temp, stop_condition_1, stop_condition_2, max_iter, max_time_per_iter, all_neighbours_flag=False)
+        else:
+            # just run simulated annealing normally
+            print("Running Solver (limited to " + str(max_time_per_iter*2) + " seconds max runtime)...")
+            clustered_trucks, cost, total_dist, longest_route = solver.simulated_annealing(initial_temp, stop_condition_1*(275/len(deliveries)), stop_condition_2*5, max_iter, max_time_per_iter*2, all_neighbours_flag=True)
+    # sanity check of solution
     assert(math.isclose(cost, cost_checker(start_node, clustered_trucks, cost_dict, w_dist, w_time)))
+    
+    # solution results
     print("total cost:")
     print(cost)
     print("total distance: ")
@@ -103,19 +116,17 @@ def main(conf: Config):
     delivery_x = []
     delivery_y = []
     delivery_colours = ['black', 'darkorange', 'red', 'saddlebrown', 'aquamarine', 'deepskyblue', 'slategrey', 'navy', 'mediumpurple', 'magenta']
-    delivery_markers = [".", "o", "p", "P", "*", "d", "x", "v", "^", "s"]
     delivery_colour = []
     # plot truck routes
     truck_i = 0
     for truck in clustered_trucks:
         color = delivery_colours[truck_i]
-        marker = delivery_markers[truck_i]
         truck_i = truck_i + 1
         for package in truck.packages:
             delivery_x.append(package.x)
             delivery_y.append(package.y)
             delivery_colour.append(color)
-        figure_ax.scatter(delivery_x, delivery_y, marker=marker, color=delivery_colour, s=[30 for dummy in delivery_x], zorder=15)
+        figure_ax.scatter(delivery_x, delivery_y, marker="o", color=delivery_colour, s=[30 for dummy in delivery_x], zorder=15)
         delivery_x = []
         delivery_y = []
         delivery_colour = []
@@ -136,7 +147,7 @@ def main(conf: Config):
         line_collection = LineCollection(segs, linewidths=[1.5], colors=to_rgb(color), zorder=10)
         figure_ax.add_collection(line_collection)
 
-    print(time.time() - st)
+    print("solution found in " + str(time.time() - st) + " seconds.")
 
     
 

@@ -238,5 +238,95 @@ class Solver:
         print(debug)
         return state, state.get_total_cost(), state.total_distance_cost, state.longest_route_cost
         
+    def brute_force(self, truck_capacity):            
+        # Step 6.0: Dijkstra from each delivery point to obtain paths from delivery point to other delivery points
+        # Step 6.1 Send a truck to each delivery point
+        delivery_distances = []
+        trucks = [Truck(i, truck_capacity) for i in range(len(self.deliveries))]
+        for i, delivery_node in enumerate(self.deliveries):
+            # Step 6.0
+            self.pathPlanner.explore(delivery_node)
+            for j, other_delivery_node in enumerate(self.deliveries):
+                if j > i:
+                    path, cost = self.pathPlanner.get_path(delivery_node, other_delivery_node)
+                    delivery_distances.append((cost, delivery_node, other_delivery_node))
+            
+            # Step 6.1
+            trucks[i].add_delivery_nodes([delivery_node])
+            min_cost, delivery_order = self.pathPlanner.tsp(self.start_node, [delivery_node], self.cost_dict)
+            trucks[i].update_path(min_cost, delivery_order)
 
+        delivery_distances = sorted(delivery_distances)
+
+        # Step 7: Calculate the initial best_cost
+        best_cost = 0 # cost = weight1*sum_of_dist + weight2*max_dist(representing time)
+        best_total_dist = 0
+        best_longest_route_dist = 0
+        best_delivery_orders = []
+        
+        sum_of_dist = 0
+        max_dist = 0
+        for truck in trucks:
+            sum_of_dist += truck.distance
+            max_dist = max(max_dist, truck.distance)
+            best_delivery_orders.append(truck.packages)
+        
+        best_cost = self.w_dist*sum_of_dist + self.w_time*max_dist
+        best_total_dist = sum_of_dist
+        best_longest_route_dist = max_dist
+        print("INITIAL COST: ", best_cost)
+
+        # Step 8.0: Find the nearest pair of delivery points that are in different clusters
+        # Step 8.1: Take the nearest pair and assign it to just one truck
+        # Step 8.2: Calculate the cost of new path and compare to best_cost
+        # Repeat Step 8 until only one truck is used
+        min_dist_i = 0
+        optimal_num_trucks = len(self.deliveries)
+
+        for i in range(len(self.deliveries)-1, 0, -1):
+            # Step 8.0
+            cost, node1, node2 = delivery_distances[min_dist_i]
+            while node1.truck == node2.truck and min_dist_i < len(delivery_distances):
+                min_dist_i += 1
+                cost, node1, node2 = delivery_distances[min_dist_i]
+
+            if min_dist_i == len(delivery_distances):
+                break
+
+            # Step 8.1
+            temp_truck_id = node2.truck.id
+            node1.truck.add_delivery_nodes(node2.truck.delivery_nodes)
+            trucks[temp_truck_id].clear()
+            min_cost, delivery_order = self.pathPlanner.tsp(self.start_node, node1.truck.delivery_nodes, self.cost_dict)
+            node1.truck.update_path(min_cost, delivery_order)
+
+            # Step 8.2
+            # Implement cost function and comparison
+            sum_of_dist = 0
+            max_dist = 0
+            curr_delivery_orders = []
+            
+            for truck in trucks:
+                sum_of_dist += truck.distance
+                max_dist = max(max_dist, truck.distance)
+                curr_delivery_orders.append([*truck.packages])
+
+            curr_cost = self.w_dist*sum_of_dist + self.w_time*max_dist
+            if curr_cost < best_cost:
+                best_cost = curr_cost
+                best_delivery_orders = [*curr_delivery_orders]
+                best_total_dist = sum_of_dist
+                best_longest_route_dist = max_dist
+                optimal_num_trucks = i
+        
+        print("FINAL COST: ", best_cost)
+        print("OPTIMAL NUM TRUCKS = ", optimal_num_trucks)
+
+        # set trucks to the best result:
+        best_delivery_orders_i = 0
+        for truck in trucks:
+            truck.packages = best_delivery_orders[best_delivery_orders_i]
+            best_delivery_orders_i += 1
+
+        return trucks, best_cost, best_total_dist, best_longest_route_dist
     

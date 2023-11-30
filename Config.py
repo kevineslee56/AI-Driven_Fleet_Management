@@ -3,20 +3,20 @@ class Config:
 
         '''map generation configuration'''
         # number of nodes/vertices in the graph structure:
-        self.num_nodes = 500                # suggested max: 10000, for visibility, 500
+        self.num_nodes = 100                # suggested max: 10000, for visibility, 500
 
         # approximate number of connections (edges) per vertex:
-        self.num_neighbours = 4             # suggested for all sized maps: 4-6 (for less dense graphs, use higher numbers)
+        self.num_neighbours = 5             # suggested for all sized maps: 4-6 (for less dense graphs, use higher numbers)
 
         # map x and y limits:
         self.x_min = 0                      # keep at 0
-        self.x_max = 350                    # suggested max 350 for x_min = 0
+        self.x_max = 200                    # suggested max 350 for x_min = 0
         self.y_min = 0                      # keep at 0
-        self.y_max = 350                    # suggested max 350 for y_min = 0
+        self.y_max = 200                    # suggested max 350 for y_min = 0
 
         '''problem configuration'''
         # number of deliveries (for random generation option)
-        self.num_deliveries = 50            # suggested max 1000, for visibility, 50
+        self.num_deliveries = 10            # suggested max 1000, for visibility, 50
 
         # number of available trucks:
         self.num_trucks = 10                # suggested max 10
@@ -26,9 +26,9 @@ class Config:
         '''simulated annealing solver configuration'''
         # note on weights: should add to 1.0, higher weight means more priority
         # distance weight for cost function:
-        self.w_dist = 0.5
+        self.w_dist = 0.2
         # time weight for cost function:
-        self.w_time = 0.5
+        self.w_time = 0.8
 
         # initial simulated annealing temp:
         self.initial_temp = 10000           # suggested 10000

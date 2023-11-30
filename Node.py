@@ -14,6 +14,7 @@ class Node:
         self.prev_node = None
         self.is_delivery = False
         self.assigned = False
+        self.truck = None
 
     def _is_valid_operand(self, other_node):
         return (hasattr(other_node, "f"))

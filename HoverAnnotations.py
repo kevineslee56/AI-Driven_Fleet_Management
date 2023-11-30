@@ -2,8 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np; np.random.seed(1)
 
 class HoverAnnotation:
-    def __init__(self, sc, lines, distances, deliveries, annotation, ax, fig, x, y):
+    def __init__(self, sc, weights, lines, distances, deliveries, annotation, ax, fig, x, y):
         self.sc = sc
+        self.weights = weights
         self.lines = lines
         self.distances = distances
         self.deliveries = deliveries
@@ -17,7 +18,7 @@ class HoverAnnotation:
         pos = self.sc.get_offsets()[ind["ind"][0]]
         annot = self.annotation
         annot.xy = pos 
-        text = "x = {}\ny= {}".format(self.x[ind["ind"][0]], self.y[ind["ind"][0]]) + "\nPath Cost:" #+ f"{self.distances[i]:.2f}"
+        text = "x = {}\ny= {}".format(self.x[ind["ind"][0]], self.y[ind["ind"][0]]) + "\nPath Cost:" + f"{self.weights[ind["ind"][0]]:.2f}"  + "\n" + str(ind["ind"])
         annot.set_text(text)
         annot.get_bbox_patch().set_facecolor('w')
         annot.get_bbox_patch().set_edgecolor('black')

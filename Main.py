@@ -123,6 +123,7 @@ def main(conf: Config):
     truck_line_collection = []
     truck_route_distances = []
     truck_route_no_deliveries = []
+    truck_seq_path_cost = []
     for truck in clustered_trucks:
         color = delivery_colours[truck_i]
         truck_i = truck_i + 1
@@ -146,16 +147,19 @@ def main(conf: Config):
             n2 = truck_node_order[i+1]
             temp_path, path_cost = pathPlanner.astar(n1, n2)
             route_dist += path_cost
+            truck_seq_path_cost.append(route_dist)
             for j in range(0, len(temp_path) - 1):
                 n3 = temp_path[j]
                 n4 = temp_path[j+1]
                 segs.append(((n3.x, n3.y),(n4.x, n4.y)))
         line_collection = LineCollection(segs, linewidths=[1.5], colors=to_rgb(color), zorder=9)
         truck_line_collection.append(figure_ax.add_collection(line_collection))
-        truck_route_distances.append(path_cost)
+        truck_route_distances.append(route_dist)
         truck_route_no_deliveries.append(len(truck.packages))
 
     print("solution found in " + str(time.time() - st) + " seconds.")
+
+    print(truck_seq_path_cost)
 
     #enable hover annotations
     annot = figure_ax.annotate("", xy=(0,0), xytext=(20,20),textcoords="offset points",
@@ -163,7 +167,7 @@ def main(conf: Config):
                     arrowprops=dict(arrowstyle="->"),zorder=20)
     annot.set_visible(False)
 
-    annotations = HoverAnnotation(sc, truck_line_collection, truck_route_distances, truck_route_no_deliveries, annot, figure_ax, fig, delivery_x, delivery_y)
+    annotations = HoverAnnotation(sc, truck_seq_path_cost, truck_line_collection, truck_route_distances, truck_route_no_deliveries, annot, figure_ax, fig, delivery_x, delivery_y)
 
     fig.canvas.mpl_connect("motion_notify_event", annotations.hover)
 

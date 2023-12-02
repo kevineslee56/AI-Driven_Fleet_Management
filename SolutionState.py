@@ -121,7 +121,6 @@ class SolutionState:
         current_total_cost = self.get_total_cost()
         result = None
         
-        #choice = random.choices(population=[0, 1, 2, 3, 4, 5], weights=[float(i)/max(self.neighbour_soln_weights) for i in self.neighbour_soln_weights], k=1)
         choices = [0, 1, 2, 3, 5]
         if not all_neighbours_flag:
             choices = [5, 5, 5, 5, 5]
@@ -145,7 +144,8 @@ class SolutionState:
                 result = self.swap_subroutes(trucks, current_total_cost, current_temp, subchoice < 0.5)
             # split route into different lengths and randomly insert into other routes
             elif choice == 4:
-                #result = self.split_route(trucks, current_total_cost, current_temp, True)
+                # not implemented yet
+                # result = self.split_route(trucks, current_total_cost, current_temp, True)
                 result = None
             elif choice == 5 and (len([t1 for t1 in trucks if len(self.routes[t1.key]) >= 3]) > 0):
                 truck = random.choice(trucks)
@@ -688,6 +688,7 @@ class SolutionState:
 
         return result
     
+    # not implemented
     def split_route(self, trucks, routes, route_costs):
         pass
 

@@ -126,6 +126,7 @@ def main(conf: Config):
             print("Running Solver (limited to " + str(max_time_per_iter*2) + " seconds max runtime)...")
             clustered_trucks, cost, total_dist, longest_route = solver.simulated_annealing(initial_temp, stop_condition_1*(275/len(deliveries)), stop_condition_2*5, max_iter, max_time_per_iter*2, all_neighbours_flag=True)
     # sanity check of solution
+    # if this fails, most likely due to generated graph not fully connected...
     assert(math.isclose(cost, cost_checker(start_node, clustered_trucks, cost_dict, w_dist, w_time)))
     
     # solution results

@@ -1,9 +1,3 @@
-# implements non path planning logic
-# eg: 
-#   which trucks take which deliveries (clustering of delivery locations)
-#   how many trucks should be used
-#   balance distance and time (cost function)
-
 from Truck import Truck
 from Node import Node, NODE_MAX_VALUE, FindNodeDist
 from PathPlanner import PathPlanner
@@ -197,45 +191,24 @@ class Solver:
         repeated = 0
         repeated_cost = 0
         st = time.time()
-        debug = 0
         while repeated < a1 and repeated_cost < a2 and ((time.time() - st) < float(max_iter_time)):
             
-            '''# for each route, try to improve it within just the route
-            result1 = NO_NEW_SOLN
-            truck = random.choice(self.trucks)
-            #for truck in self.trucks:
-            result1 = state.create_neighbour_route(truck, cur_T)
-            if result1 == NEW_SOLN:
+            # Find a neighbour and evaluate
+            result = state.create_neighbour(self.trucks, cur_T, all_neighbours_flag)
+            
+            if result == NEW_SOLN:
                 repeated = 0
                 repeated_cost = 0
-            elif result1 == SAME_COST:
+            elif result == SAME_COST:
                 repeated = 0
                 repeated_cost = repeated_cost + 1
-            elif result1 == NO_NEW_SOLN:
-                repeated = repeated + 1
-                repeated_cost = repeated_cost + 1'''
-            
-            
-            # now also try to improve it by letting the routes exchange packages
-            result2 = state.create_neighbour(self.trucks, cur_T, all_neighbours_flag)
-            
-            if result2 == NEW_SOLN:
-                repeated = 0
-                repeated_cost = 0
-            elif result2 == SAME_COST:
-                repeated = 0
-                repeated_cost = repeated_cost + 1
-            elif result2 == NO_NEW_SOLN:
+            elif result == NO_NEW_SOLN:
                 repeated = repeated + 1
                 repeated_cost = repeated_cost + 1
             
             # decrement temp
             cur_T = cur_T * a
 
-            debug = debug + 1
-
-        print("executions:")
-        print(debug)
         return state, state.get_total_cost(), state.total_distance_cost, state.longest_route_cost
         
     def brute_force(self, truck_capacity):            

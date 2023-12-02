@@ -29,7 +29,8 @@ def GenerateMap(num_nodes, num_edges, x_min, x_max, y_min, y_max):
             if not repeated:
                 occupied[gen_y - y_min][gen_x - x_min] = i
                 nodes_list.append(Node(i, gen_x, gen_y))
-    # get n nearest nodes for each node
+    # get n nearest nodes for each node. 
+    # TODO: chance of not fully connected graph, fix this
     for node in nodes_list:
         current_id = int(node.id)
         nearest_found = 0
@@ -48,8 +49,6 @@ def GenerateMap(num_nodes, num_edges, x_min, x_max, y_min, y_max):
             if rel_x == rel_y or (rel_x < 0 and rel_x == -rel_y) or (rel_x > 0 and rel_x == 1-rel_y):
                 dx, dy = -dy, dx
             rel_x, rel_y = rel_x + dx, rel_y + dy
-
-    # TODO: save map to file
 
     return nodes_list
 
@@ -81,7 +80,11 @@ def PlotMap(nodes_list):
     ax.set_ylabel('Y-axis')
     ax.set_title('Generated Map')
 
+    return fig, ax
+
+def choose_start(nodes_list):
     # select start and end:
+    print("left-click on a node to choose the warehouse")
     points = plt.ginput(1)
 
     start_node = None
@@ -93,6 +96,4 @@ def PlotMap(nodes_list):
         if dist < start_node_dist:
             start_node_dist = dist
             start_node = node
-
-
-    return start_node, ax
+    return start_node

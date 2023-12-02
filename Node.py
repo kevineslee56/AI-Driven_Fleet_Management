@@ -6,12 +6,15 @@ NODE_MAX_VALUE = 1000000000
 class Node:
     def __init__(self, id: int, x, y):
         self.id = id
+        self.key = str(id)
         self.x = x
         self.y = y
         self.adj_nodes = []
         self.f = NODE_MAX_VALUE
         self.prev_node = None
         self.is_delivery = False
+        self.assigned = False
+        self.truck = None
 
     def _is_valid_operand(self, other_node):
         return (hasattr(other_node, "f"))
